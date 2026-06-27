@@ -6,8 +6,8 @@ const API = axios.create({
 
 export async function fetchNotifications(
     page = 1,
-    limit = 10,
-    type = "All"
+    filter = "All",
+    limit = 10
 ) {
 
     const params = {
@@ -15,8 +15,8 @@ export async function fetchNotifications(
         limit
     };
 
-    if (type !== "All") {
-        params.notification_type = type;
+    if (filter !== "All") {
+        params.notification_type = filter;
     }
 
     const response = await API.get("/notifications", {
@@ -29,7 +29,9 @@ export async function fetchNotifications(
 
 export async function fetchPriorityNotifications() {
 
-    const response = await API.get("/notifications/priority");
+    const response = await API.get(
+        "/notifications/priority"
+    );
 
     return response.data.data;
 

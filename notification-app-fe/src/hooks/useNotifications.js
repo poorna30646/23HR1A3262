@@ -20,20 +20,26 @@ export function useNotifications(page, filter) {
                 setError(null);
 
                 const data = await fetchNotifications(
-                    page,
-                    10,
-                    filter
-                );
+    page,
+    filter
+);
 
-                setNotifications(data.notifications || []);
+                const notificationList =
+                    data.notifications || [];
 
-                setTotal(data.total || data.notifications?.length || 0);
+                setNotifications(notificationList);
+
+                const totalNotifications =
+                    data.total ||
+                    notificationList.length;
+
+                setTotal(totalNotifications);
 
                 setTotalPages(
-                    Math.ceil(
-                        (data.total || data.notifications?.length || 0) / 10
-                    ) || 1
-                );
+    notificationList.length === 10
+        ? page + 1
+        : page
+);
 
             } catch (err) {
 

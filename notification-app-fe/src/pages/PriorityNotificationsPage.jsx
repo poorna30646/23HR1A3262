@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
     Alert,
@@ -6,45 +6,55 @@ import {
     Box,
     CircularProgress,
     Divider,
-    Pagination,
     Stack,
     Typography
 } from "@mui/material";
 
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 
+import { fetchPriorityNotifications } from "../api/notifications";
 import { NotificationCard } from "../components/NotificationCard";
-import { NotificationFilter } from "../components/NotificationFilter";
-import { useNotifications } from "../hooks/useNotifications";
 
-export function NotificationsPage() {
+export function PriorityNotificationsPage() {
 
-    const [filter, setFilter] = useState("All");
-    const [page, setPage] = useState(1);
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const {
-        notifications,
-        totalPages,
-        loading,
-        error
-    } = useNotifications(page, filter);
+    useEffect(() => {
 
-    const unreadCount = notifications.length;
+        const loadPriorityNotifications = async () => {
 
-    const handleFilterChange = (newFilter) => {
+            try {
 
-        if (!newFilter) return;
+                setLoading(true);
+                setError(null);
 
-        setFilter(newFilter);
-        setPage(1);
+                const data = await fetchPriorityNotifications();
 
-    };
+                setNotifications(data);
 
-    const handlePageChange = (_, newPage) => {
+            } catch (err) {
 
-        setPage(newPage);
+                console.error(err);
 
-    };
+                setError(
+                    err.response?.data?.message ||
+                    err.message ||
+                    "Something went wrong"
+                );
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        };
+
+        loadPriorityNotifications();
+
+    }, []);
 
     return (
 
@@ -65,12 +75,12 @@ export function NotificationsPage() {
             >
 
                 <Badge
-                    badgeContent={unreadCount}
-                    color="primary"
+                    badgeContent={notifications.length}
+                    color="error"
                     max={99}
                 >
 
-                    <NotificationsIcon sx={{ fontSize: 30 }} />
+                    <NotificationsActiveIcon sx={{ fontSize: 30 }} />
 
                 </Badge>
 
@@ -78,21 +88,12 @@ export function NotificationsPage() {
                     variant="h5"
                     fontWeight={700}
                 >
-                    Notifications
+                    Priority Notifications
                 </Typography>
 
             </Stack>
 
             <Divider sx={{ mb: 3 }} />
-
-            <Box mb={3}>
-
-                <NotificationFilter
-                    value={filter}
-                    onChange={handleFilterChange}
-                />
-
-            </Box>
 
             {loading && (
 
@@ -111,7 +112,9 @@ export function NotificationsPage() {
             {!loading && error && (
 
                 <Alert severity="error">
-                    Failed to load notifications: {error}
+
+                    {error}
+
                 </Alert>
 
             )}
@@ -119,7 +122,9 @@ export function NotificationsPage() {
             {!loading && !error && notifications.length === 0 && (
 
                 <Alert severity="info">
-                    No notifications found.
+
+                    No priority notifications found.
+
                 </Alert>
 
             )}
@@ -138,26 +143,6 @@ export function NotificationsPage() {
                     ))}
 
                 </Stack>
-
-            )}
-
-            {!loading && !error && (
-
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    mt={4}
-                >
-
-                    <Pagination
-                        count={totalPages}
-                        page={page}
-                        onChange={handlePageChange}
-                        color="primary"
-                        shape="rounded"
-                    />
-
-                </Box>
 
             )}
 

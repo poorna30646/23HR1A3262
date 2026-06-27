@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const axios = require("axios");
 const { Log } = require("../../logging-middleware");
 
@@ -22,9 +24,13 @@ exports.fetchNotifications = async (query) => {
                 Authorization: `Bearer ${TOKEN}`
             },
             params: {
-                limit: query.limit,
-                page: query.page,
-                notification_type: query.notification_type
+                page: query.page || 1,
+                limit: query.limit || 10,
+                notification_type:
+                    query.notification_type &&
+                    query.notification_type !== "All"
+                        ? query.notification_type
+                        : undefined
             }
         });
 
@@ -47,7 +53,8 @@ exports.fetchNotifications = async (query) => {
         );
 
         throw new Error(
-            err.response?.data?.message || "Unable to fetch notifications"
+            err.response?.data?.message ||
+            "Unable to fetch notifications"
         );
 
     }
@@ -76,17 +83,28 @@ exports.fetchPriorityNotifications = async () => {
         const priority = notifications
             .sort((a, b) => {
 
-                const weight = {
+                const priorityOrder = {
                     Placement: 3,
                     Result: 2,
                     Event: 1
                 };
 
-                if (weight[b.Type] !== weight[a.Type]) {
-                    return weight[b.Type] - weight[a.Type];
+                if (
+                    priorityOrder[b.Type] !==
+                    priorityOrder[a.Type]
+                ) {
+
+                    return (
+                        priorityOrder[b.Type] -
+                        priorityOrder[a.Type]
+                    );
+
                 }
 
-                return new Date(b.Timestamp) - new Date(a.Timestamp);
+                return (
+                    new Date(b.Timestamp) -
+                    new Date(a.Timestamp)
+                );
 
             })
             .slice(0, 10);
@@ -110,7 +128,8 @@ exports.fetchPriorityNotifications = async () => {
         );
 
         throw new Error(
-            err.response?.data?.message || "Unable to fetch priority notifications"
+            err.response?.data?.message ||
+            "Unable to fetch priority notifications"
         );
 
     }
